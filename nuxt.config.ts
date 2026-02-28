@@ -36,6 +36,9 @@ export default defineNuxtConfig({
       routes: []
     }
   },
+  routeRules: {
+    '/': { ssr: false }
+  },
 
   // Ajuste para evitar problemas de caminhos no Android/iOS
   app: {

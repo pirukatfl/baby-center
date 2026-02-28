@@ -55,26 +55,34 @@
     const firstRender = ref(true)
 
     async function loginWithGoogle() {
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
             // Para onde o usuário volta após o login
             redirectTo: 'http://localhost:3000/confirm'
         }
     })
-    console.log(data)
-    console.log(error)
     if (error) console.error('Erro ao logar:', error.message)
     }
+
+    function validEmailVerification() {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(registerForm.value.login);
+    }
     function validateRegisterForm() {
+        if (!validEmailVerification()) {
+            alert('informe um email válido')
+            return true
+        }
+
         if (registerForm.value.password.length < 6) {
             alert('senha com no mínimo 6 caracteres')
-            return false
+            return true
         }
 
         if (registerForm.value.confirmPassword !== registerForm.value.password) {
             alert('as senhas estão diferentes!')
-            return false
+            return true
         }
         return registerForm.value.login === '' || registerForm.value.password === ''
     }

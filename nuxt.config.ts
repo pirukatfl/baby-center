@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxtjs/supabase', '@nuxt/image'],
+  modules: ['@nuxtjs/supabase', '@nuxt/image', '@vite-pwa/nuxt'],
   image: {
     inject: true,
     quality: 100,
@@ -27,11 +27,11 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  // Desativa o SSR para que o app se comporte como um SPA/Static dentro do celular
-  ssr: false, 
+  ssr: true, 
   
   // Garante que o comando 'generate' funcione corretamente
   nitro: {
+    preserveStaticContext: true,
     prerender: {
       crawlLinks: true
     }
@@ -39,11 +39,15 @@ export default defineNuxtConfig({
 
   // Ajuste para evitar problemas de caminhos no Android/iOS
   app: {
-    baseURL: './',
+    baseURL: '/',
     head: {
       htmlAttrs: {
         lang: 'pt-BR',
       },
+      meta: [{ name: 'theme-color', content: '#10b981' }],
+      link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' }
+      ]
     },
   },
   supabase: {
@@ -60,5 +64,42 @@ export default defineNuxtConfig({
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
     }
-  }
+  },
+  pwa: {
+    injectRegister: 'auto',
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'Baby Center',
+      short_name: 'Timeline',
+      theme_color: '#10b981',
+      background_color: '#ffffff',
+      display: 'standalone', // FORÇA o modo de aplicativo
+      orientation: 'portrait',
+      start_url: '/login', // Importante para o navegador saber onde o app começa
+      icons: [
+        {
+          src: '/images/logo-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+        },
+        {
+          src: '/images/logo-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any maskable',
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}'], // Cache de arquivos estáticos
+    },
+    client: {
+      installPrompt: true, // Facilita o aviso de instalação
+    },
+    devOptions: {
+      enabled: true, // Permite testar o PWA durante o desenvolvimento
+      type: 'classic',
+    },
+  },
 })

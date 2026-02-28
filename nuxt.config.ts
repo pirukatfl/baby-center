@@ -1,12 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@nuxtjs/supabase', '@nuxt/image', '@vite-pwa/nuxt'],
+  ssr: false,
   
   // 1. DESATIVAR PRERENDER TOTALMENTE
   // Isso impede que a Vercel tente "rodar" o app durante o build
   nitro: {
     prerender: {
-      crawlLinks: false, // Mude para false
+      crawlLinks: false,
       routes: []
     }
   },
@@ -18,8 +19,6 @@ export default defineNuxtConfig({
 
   supabase: {
     redirect: false,
-    // Remova ou comente a linha abaixo se o arquivo não existir para sumir o aviso de "file not found"
-    // types: '~/types/database.types.ts', 
   },
 
   // 3. CORREÇÃO RUNTIME CONFIG

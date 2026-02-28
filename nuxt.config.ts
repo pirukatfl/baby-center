@@ -31,9 +31,9 @@ export default defineNuxtConfig({
   
   // Garante que o comando 'generate' funcione corretamente
   nitro: {
-    preserveStaticContext: true,
     prerender: {
-      crawlLinks: true
+      crawlLinks: true,
+      routes: []
     }
   },
 

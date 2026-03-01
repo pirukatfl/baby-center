@@ -45,7 +45,6 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  ssr: true, 
 
   app: {
     baseURL: '/',
@@ -60,16 +59,17 @@ export default defineNuxtConfig({
     injectRegister: 'auto',
     registerType: 'autoUpdate',
     manifest: {
-      name: 'Baby Center',
-      short_name: 'Timeline',
+      name: 'Central do Bebê',
+      short_name: 'Central do Bebê',
       theme_color: '#10b981',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',
-      start_url: '/login',
+      start_url: './',
+      scope: '/',
       icons: [
-        { src: '/images/logo-192.png', sizes: '192x192', type: 'image/png' },
-        { src: '/images/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        { src: 'images/logo-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'images/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
       ],
     },
     workbox: {

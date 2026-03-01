@@ -1,9 +1,83 @@
 <template>
+    <button v-if="showButton" class="install-app" @click="installApp">
+      Instalar Central do Bebê
+    </button>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
 </template>
+<script setup lang="ts">
+const { $pwa } = useNuxtApp()
+const deferredPrompt = ref<any>(null)
+const showButton = ref(false)
+
+onMounted(() => {
+    // Escuta o evento que o navegador dispara quando o PWA é instalável
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Impede o banner automático (nós vamos mostrar o nosso botão)
+        e.preventDefault()
+        // Guarda o evento para usar depois
+        deferredPrompt.value = e
+        showButton.value = true
+        console.log('✅ Evento beforeinstallprompt capturado!')
+    })
+
+    window.addEventListener('appinstalled', () => {
+        // Esconde o botão se o usuário já instalou
+        showButton.value = false
+        deferredPrompt.value = null
+        console.log('🎉 PWA instalado com sucesso!')
+    })
+})
+
+async function installApp() {
+    if (!deferredPrompt.value) {
+        // Se o evento manual não pegou, tentamos o do plugin como fallback
+        if ($pwa?.install) await $pwa.install()
+        return
+    }
+    
+    // Mostra o prompt nativo do navegador
+    deferredPrompt.value.prompt()
+    
+    // Espera a resposta do usuário
+    const { outcome } = await deferredPrompt.value.userChoice
+    console.log(`Usuário escolheu: ${outcome}`)
+    
+    // Limpa o evento, pois ele só pode ser usado uma vez
+    deferredPrompt.value = null
+    showButton.value = false
+}
+</script>
 <style lang="scss">
+.install-app {
+  position: fixed;
+  right: 0;
+  top: 0;
+  margin: 15px 15px 0 0;
+}
+button {
+    padding: 8px 15px;
+    outline: none;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    display: flex;
+    background: rgba(#a0d7ee, .8);
+    transition: .2s ease-in-out;
+    color: #fff;
+    cursor: pointer;
+    margin: 5px 0;
+    border: 1px solid rgba(#000, .5);
+
+    @media (max-width: 769px) {
+        background: rgba(#a0d7ee, 1);
+    }
+
+    &:hover {
+        background: rgba(#a0d7ee, 1);
+    }
+}
 //verde menta claro
 // Cor Primária (Ação e Marca)
 // Usada para botões principais (CTAs), barras de progresso ativas e ícones importantes.

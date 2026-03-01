@@ -58,9 +58,7 @@
         const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            // Para onde o usuário volta após o login
-            // redirectTo: 'http://localhost:3000/confirm'
-            redirectTo: 'https://baby-center.vercel.app/confirm'
+            redirectTo: !import.meta.dev ? 'https://baby-center.vercel.app/confirm' : 'http://localhost:3000/confirm'
         }
     })
     if (error) console.error('Erro ao logar:', error.message)
@@ -104,7 +102,7 @@
                 password: registerForm.value.password,
                 options: {
                     // emailRedirectTo: 'http://localhost:3000/login',
-                    emailRedirectTo: 'https://baby-center.vercel.app/login',
+                    emailRedirectTo: !import.meta.dev ? 'https://baby-center.vercel.app/login' : 'http://localhost:3000/login',
                     data: {
                         name: registerForm.value.name
                     }

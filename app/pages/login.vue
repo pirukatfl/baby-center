@@ -36,8 +36,10 @@
     definePageMeta({
         layout: false
     })
-    import { ref, watch } from 'vue'
+    import { ref, watch, onMounted } from 'vue'
     
+    const baseURL = window.location.origin
+
     const supabase = useSupabaseClient()
 
     const registerForm = ref({
@@ -58,7 +60,7 @@
         const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: import.meta.dev ? 'https://baby-center.vercel.app/confirm' : 'http://localhost:3000/confirm'
+            redirectTo: `${baseURL}/confirm`
         }
     })
     if (error) console.error('Erro ao logar:', error.message)
@@ -101,8 +103,7 @@
                 email: registerForm.value.login,
                 password: registerForm.value.password,
                 options: {
-                    // emailRedirectTo: 'http://localhost:3000/login',
-                    emailRedirectTo: import.meta.dev ? 'https://baby-center.vercel.app/login' : 'http://localhost:3000/login',
+                    emailRedirectTo: `${baseURL}/login`,
                     data: {
                         name: registerForm.value.name
                     }
@@ -158,6 +159,12 @@
         registerForm.value.login = ''
         registerForm.value.password = ''
         registerForm.value.confirmPassword = ''
+    })
+    onMounted(async() => {
+        const familyId = localStorage.getItem('family_id') || 0
+        if (familyId) {
+            await navigateTo('/')
+        }
     })
 </script>
 <style lang="scss" scoped>

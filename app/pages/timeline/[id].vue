@@ -140,7 +140,6 @@
     }
 
     function getImageModel(image: File) {
-        console.log(image)
         newImage.value = image
     }
 
@@ -153,15 +152,12 @@
     }
 
     function transformToObjectUrl(file: File) {
-        console.log('EVENT', file)
         if (currentEventClickedToEdit.value.image) {
             URL.revokeObjectURL(currentEventClickedToEdit.value.image);
         }
         currentEventClickedToEdit.value.image = URL.createObjectURL(file)
-        console.log('currentEventClickedToEdit.value.image', currentEventClickedToEdit.value.image)
     }
     function updateFilter(event: string) {
-        console.log('event', event)
         if (event === 'all') {
             filters.value = []
             getEvents()
@@ -230,7 +226,6 @@
     }
 
     async function saveEventImage(eventId) {
-        console.log(newImage)
         if (!imageToEdit.value) return
         const fileExt = newImage.value.name.split('.').pop()
         const fileName = `${Math.random()}.${fileExt}`
@@ -603,6 +598,7 @@ button {
     font-size: 1rem;
     display: flex;
     align-items: center;
+    color: rgba($color: #000000, $alpha: .7);
     border: 1px solid rgba($color: #000000, $alpha: .3);
 }
 

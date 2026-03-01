@@ -7,7 +7,7 @@
       </div> -->
       <ul>
         <li><NuxtLink to="/"><IconSvg :icon="'edit'" /><span>Meus Bebês</span></NuxtLink></li>
-        <li><NuxtLink to="/relatorios"><IconSvg :icon="'report'" /><span>Relatórios</span></NuxtLink></li>
+        <!-- <li><NuxtLink to="/relatorios"><IconSvg :icon="'report'" /><span>Relatórios</span></NuxtLink></li> -->
         <li @click="logout"><IconSvg :icon="'door-out'" /><span>Sair</span></li>
       </ul>
     </nav>

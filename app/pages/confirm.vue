@@ -10,7 +10,6 @@ const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 
 watch(user, async() => {
-    console.log('USER', user)
     if (user.value) {
         await getFamilyId()
         await navigateTo('/')

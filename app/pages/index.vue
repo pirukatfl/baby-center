@@ -21,7 +21,10 @@
                     <h2>Cada momento conta</h2>
                     <p>Acompanhe o desenvolvimento  do seu pequeno, desde os primeiros passos até as grnades conquistas!</p>
                 </div>
-                <button class="bold" @click="saveChild">continuar</button>
+                <div class="flex">
+                    <button class="no-background" @click="cancel">cancelar</button>
+                    <button class="bold" @click="saveChild">continuar</button>
+                </div>
             </div>
             <div class="container" v-if="step === 3">
                 <input type="text" placeholder="nome" v-model="form.name">
@@ -46,7 +49,10 @@
                 </select>
                 <InputWeigth v-model="form.weight" />
                 <InputHeight v-model="form.height" />
-                <button class="bold" @click="saveInfoChild">continuar</button>
+                <div class="flex">
+                    <button class="no-background" @click="cancel">cancelar</button>
+                    <button class="bold" @click="saveInfoChild">continuar</button>
+                </div>
             </div>
             <div class="container" v-if="step === 4">
                 <h2>Confirme as informações</h2>
@@ -58,7 +64,10 @@
                     <div>Peso: {{ form.weight }}</div>
                     <div>Altura: {{ form.height }}</div>
                 </div>
-                <button class="bold" @click="save">salvar</button>
+                <div class="flex">
+                    <button class="no-background" @click="cancel">cancelar</button>
+                    <button class="bold" @click="save">salvar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -109,6 +118,10 @@
     }
     function saveInfoChild() {
         nextStep()
+    }
+
+    function cancel() {
+        step.value = 1
     }
 
     function formatValue(field: keyof Children) {
@@ -163,6 +176,12 @@
     })
 </script>
 <style lang="scss" scoped>
+.flex {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
 .container-list {
     display: flex;
     align-items: baseline;
@@ -175,6 +194,7 @@
         align-items: center;
         padding: 5px;
         max-width: 380px;
+        width: 100%;
 
         .logo {
             padding: 5px 10px;
@@ -198,7 +218,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            margin: 10px 0;
+            margin: 10px 0 0 0;
 
             p {
                 font-size: 1.2rem;
@@ -307,5 +327,13 @@ button {
 label {
     margin-top: 5px;
     margin-bottom: -5px;
+}
+
+.no-background {
+    background-color: rgba(160, 160, 160, 0.7);
+
+    &:hover {
+        background-color: rgba(240, 89, 89, 1);;
+    }
 }
 </style>

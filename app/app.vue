@@ -60,14 +60,12 @@ button {
     padding: 3px 5px;
     outline: none;
     border: none;
-    border-radius: 50px;
     font-size: 1.2rem;
     display: flex;
     background: rgba(#a0d7ee, .8);
     transition: .2s ease-in-out;
     color: #fff;
     cursor: pointer;
-    margin: 5px 0;
     border: 1px solid rgba(#000, .5);
 
     @media (max-width: 769px) {

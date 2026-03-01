@@ -5,14 +5,23 @@
             <div class="container" v-if="step === 1">
                 <h2>Selecione</h2>
                 <div class="selection-step">
-                    <div class="characters" v-for="children in childrens" @click="showEventsChildren(children.id)">
-                        <div class="avatar box">{{ children.name.charAt(0) }}</div>
-                        <span>{{ children.name }}</span>
-                    </div>
+                    <template v-for="children in childrens">
+                        <div class="characters" @click="showEventsChildren(children.id)">
+                            <div class="avatar box">{{ children.name.charAt(0) }}</div>
+                            <span>{{ children.name }}</span>
+                        </div>
+                        <div class="delete-button-positioned" @click="openConfirmation(children)">
+                            <span><IconSvg :noHover="true" icon="delete" /></span>
+                            <!-- <span><IconSvg :noHover="true" icon="edit" @click="openConfirmation(event)" /></span> -->
+                        </div>
+                    </template>
                     <div class="characters" @click="nextStep">
                         <div class="avatar box">+</div>
                         <span>Adicionar</span>
                     </div>
+                    <BaseAlert v-show="showAlertDelete" :action="removeChild" @close="close">
+                        Confirmar a exclusão do item {{ currentEventClicked.name }}?
+                    </BaseAlert>
                 </div>
             </div>
             <div class="container" v-if="step === 2">
@@ -99,12 +108,21 @@
         weight: '',
         height: '',
     }
+
+    const showAlertDelete = ref(false)
+    let currentEventClicked = {}
+
     const router = useRouter()
     const step = ref(1)
     const childrens = ref([])
     const form = ref<Children>(defaultValue)
     const familyId = localStorage.getItem('family_id') || 0
     
+    function openConfirmation(event: {}) {
+        currentEventClicked = event
+        showAlertDelete.value = true
+    }
+
     function showEventsChildren(childrenId: string) {
         router.replace(`timeline/${childrenId}`)
     }
@@ -122,6 +140,24 @@
 
     function cancel() {
         step.value = 1
+    }
+
+    function close() {
+        showAlertDelete.value = false
+    }
+    async function removeChild() {
+        showAlertDelete.value = false
+        const { error } = await supabase
+            .from('children')
+            .delete()
+            .eq('id', currentEventClicked.id)
+        if (!error) {
+            currentEventClicked = {}
+            await getChildrens()
+            return
+        }
+        console.log(error)
+        alert('erro ao deletar evento')
     }
 
     function formatValue(field: keyof Children) {
@@ -231,6 +267,34 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            position: relative;
+
+            .delete-button-positioned {
+                position: absolute;
+                left: -50px;
+                top: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 50px;
+                height: 50px;
+                border-radius: 30px;
+                background-color: #cacaca;
+                border: 1px solid #6d6d6d;
+                cursor: pointer;
+                transition: ease-in-out .2s;
+
+                &:hover {
+                    background-color: rgb(252, 83, 83);
+                }
+
+                img {
+                    margin-top: 3px;
+                    fill: red!important;
+                    stroke: red!important;
+                    color: red!important;
+                }
+            }
         }
 
         input, select {

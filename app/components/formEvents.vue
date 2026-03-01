@@ -7,14 +7,16 @@
                         <div class="title">novo evento</div>
                         <div class="close" @click="closeModal">fechar</div>
                     </div>
-                    <input-file v-model="form.file" @change-image="getImageModel($event)" />
-                    <input :class="{ error: form.title === '' }" placeholder="título" type="text" v-model="form.title">
-                    <select name="event" id="event" v-model="form.category">
-                        <option v-for="category in categoriesData" :value="category.id">{{ categoriesMapper[category.name] }}</option>
-                    </select>
-                    <input-currency v-model="form.value" />
-                    <input placeholder="data" type="date" v-model="form.date">
-                    <textarea placeholder="Descrição do evento" v-model="form.description" />
+                    <div class="body">
+                        <input-file v-model="form.file" @change-image="getImageModel($event)" />
+                        <input :class="{ error: form.title === '' }" placeholder="título" type="text" v-model="form.title">
+                        <select name="event" id="event" v-model="form.category">
+                            <option v-for="category in categoriesData" :value="category.id">{{ categoriesMapper[category.name] }}</option>
+                        </select>
+                        <input-currency v-model="form.value" />
+                        <input placeholder="data" type="date" v-model="form.date">
+                        <textarea placeholder="Descrição do evento" v-model="form.description" />
+                    </div>
                     <button @click="saveEvent">salvar evento</button>
                 </div>
             </div>
@@ -187,6 +189,7 @@
         justify-content: center;
         align-items: center;
         background-color: #f4f4f4;
+        overflow-y: auto;
 
         .header {
             padding: 15px 24px;
@@ -205,12 +208,17 @@
                 cursor: pointer;
             }
         }
+
+        .body {
+            overflow-y: auto;
+
+        }
     }
 }
 
 input, select, textarea {
     margin-top: 10px;
-    width: 90%;
+    width: 100%;
     padding: 10px 15px;
     border-radius: 25px;
     border: none;

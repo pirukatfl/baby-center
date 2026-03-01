@@ -180,7 +180,7 @@
     .modal {
         padding: 0 0px 15px 0;
         border-radius: 24px;
-        width: 90vw;
+        width: 90dvw;
         min-width: 300px;
         flex-direction: column;
         display: flex;

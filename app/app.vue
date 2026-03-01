@@ -57,7 +57,7 @@ async function installApp() {
   margin: 15px 15px 0 0;
 }
 button {
-    padding: 8px 15px;
+    padding: 3px 5px;
     outline: none;
     border: none;
     border-radius: 50px;

@@ -152,8 +152,8 @@
             .delete()
             .eq('id', currentEventClicked.id)
         if (!error) {
-            currentEventClicked = {}
             await getChildrens()
+            currentEventClicked = {}
             return
         }
         console.log(error)

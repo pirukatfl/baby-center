@@ -219,7 +219,7 @@
 
                 if (storageError) alert(`Erro ao excluir imagem do storage: ${storageError.message}`)
             }
-            getEvents()
+            await getEvents()
             return
         }
         alert('erro ao deletar evento')

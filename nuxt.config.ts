@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   modules: ['@nuxtjs/supabase', '@nuxt/image', '@vite-pwa/nuxt'],
   ssr: false,
-  
+
   // 1. DESATIVAR PRERENDER TOTALMENTE
   // Isso impede que a Vercel tente "rodar" o app durante o build
   nitro: {
@@ -19,6 +19,19 @@ export default defineNuxtConfig({
 
   supabase: {
     redirect: false,
+    cookieOptions: {
+      maxAge: 60 * 60 * 8, // 8 horas
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    },
+    clientOptions: {
+      auth: {
+        flowType: 'pkce', // Recomendado para Nuxt 3 e Google Login
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    }
   },
 
   // 3. CORREÇÃO RUNTIME CONFIG

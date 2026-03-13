@@ -8,7 +8,7 @@
                         <div class="close" @click="closeModal">fechar</div>
                     </div>
                     <div class="body">
-                        <input-file v-model="form.file" @change-image="getImageModel($event)" />
+                        <input-file v-model="form.filesUrl" @change-image="getImageModel($event)" />
                         <input :class="{ error: form.title === '' }" placeholder="título" type="text" v-model="form.title">
                         <select name="event" id="event" v-model="form.category">
                             <option v-for="category in categoriesData" :value="category.id">{{ categoriesMapper[category.name] }}</option>
@@ -30,7 +30,7 @@
     const route = useRoute()
     const supabase = useSupabaseClient()
     const categoriesData = ref([])
-    const file = ref(null)
+    const files = ref<File[]>([])
     const categoriesMapper = {
         exam: 'Exame',
         consultation: 'Consulta',
@@ -46,6 +46,7 @@
         value: number,
         date: string,
         imageUrl: string,
+        filesUrl?: string[],
     }
 
     const form = ref<FormEvent>({
@@ -55,6 +56,7 @@
         value: 0,
         date: '',
         imageUrl: '',
+        filesUrl: [],
     })
 
     function getNow() {
@@ -85,37 +87,51 @@
         form.value.value = 0
         form.value.date = ''
         form.value.imageUrl = ''
+        form.value.filesUrl = []
+        files.value = []
         getNow()
     }
 
-    function getImageModel(image: File) {
-        file.value = image
+    function getImageModel(images: File[]) {
+        files.value = images
     }
 
-    async function saveEventImage(eventId) {
-        if (!file.value) return
-        const fileExt = file.value.name.split('.').pop()
-        const fileName = `${Math.random()}.${fileExt}`
-        const filePath = `event/${fileName}`
+    async function saveEventImage(eventId: number) {
+        if (!files.value || files.value.length === 0) return
 
-        const { data, error } = await supabase.storage
-            .from('images')
-            .upload(filePath, file.value)
+        const uploads = files.value.map(async (file) => {
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${Math.random()}.${fileExt}`
+            const filePath = `event/${fileName}`
 
-        if (error) {
-            console.error('Erro no upload:', error.message);
-            return;
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(filePath, file)
+
+            if (error) {
+                console.error('Erro no upload:', error.message)
+                return null
+            }
+            return filePath
+        })
+
+        const uploadedPaths = await Promise.all(uploads)
+        const pathsToSave = uploadedPaths.filter(path => path !== null) as string[]
+
+        if (pathsToSave.length > 0) {
+            await saveImageEventPath(eventId, pathsToSave)
         }
-
-        await saveImageEventPath(eventId, filePath)
     }
 
-    async function saveImageEventPath(eventId: number, filePath: string) {
+    async function saveImageEventPath(eventId: number, filePaths: string[]) {
+        const payload = filePaths.map(filePath => ({
+            event_id: eventId,
+            image_path: filePath
+        }))
+
         const { data, error } = await supabase
         .from('image_events')
-        .insert([
-            { event_id: eventId, image_path: filePath },
-        ])
+        .insert(payload)
         .select()
 
         if (error) {

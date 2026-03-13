@@ -1,7 +1,8 @@
 <template>
     <div class="container-events">
         <div class="new-event">
-            <button @click="open" :disabled="events.length >= 30"><IconSvg icon="add" /><span>novo evento</span></button>
+            <button v-if="events.length < 30" @click="open"><IconSvg icon="add" /><span>novo evento</span></button>
+            <button v-if="events.length >= 30" class="upgrade-btn" @click="isOpenPremium = true"><IconSvg icon="star" /><span>Assinar Premium</span></button>
             <div class="filter">
                 <span>Filtrar por:</span>
                 <BaseTag
@@ -14,11 +15,12 @@
             </div>
         </div>
         <BaseAlert v-show="showAlertDelete" :action="removeEvent" @close="close">
-            Confirmar a exclusão do item {{ currentEventClicked.event_title }}?
+            Confirmar a exclusão do item {{ currentEventClicked?.event_title }}?
         </BaseAlert>
+        <PremiumCheckout :isOpen="isOpenPremium" @close="isOpenPremium = false" />
         <div class="container">
             <FormEvents :isOpen="isOpen" @close="close" @reload-list-events="getEvents" />
-            <ModalImage :isOpenImage="isOpenImage" :imagePath="imagePath" :eventTitle="eventTitle" @close="close" />
+            <ModalImage :isOpenImage="isOpenImage" :imagePaths="imagePaths" :eventTitle="eventTitle" @close="close" />
             <div class="timeline" v-for="event in events" :key="event.id">
                 <template  v-if="event.id !== currentEventClickedToEdit.id"> 
                     <div class="line">
@@ -45,10 +47,10 @@
                         <div
                             class="file"
                             v-if="event.image.length"
-                            @click="openModalImage(`${config.public.supabaseUrl}/storage/v1/object/public/images/${event.image[0].image_path}`, event.event_title)"
+                            @click="openModalImage(event.image.map(img => `${config.public.supabaseUrl}/storage/v1/object/public/images/${img.image_path}`), event.event_title)"
                         >
                             <IconSvg :noHover="true" title="Ver mais" icon="image" />
-                            <span>Ver mais</span>
+                            <span>Ver mais ({{ event.image.length }})</span>
                         </div>
                     </div>
                 </template>
@@ -64,13 +66,17 @@
                                     <div class="edit-image">
                                         <IconSvg icon="edit" @click="toggleEditImage(true)"/>
                                     </div>
-                                    <NuxtImg
-                                        :src="`${config.public.supabaseUrl}/storage/v1/object/public/images/${currentEventClickedToEdit.image[0].image_path}`"
-                                        draggable="false"
-                                    />
+                                    <div class="image-preview" style="display: flex; gap: 5px; overflow-x: auto;">
+                                        <NuxtImg
+                                            v-for="(img, idx) in currentEventClickedToEdit.image" :key="idx"
+                                            :src="`${config.public.supabaseUrl}/storage/v1/object/public/images/${img.image_path}`"
+                                            draggable="false"
+                                            style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;"
+                                        />
+                                    </div>
                                 </template>
                                 <template v-else>
-                                    <div v-if="isUpdateImage || newImage" class="edit-image">
+                                    <div v-if="isUpdateImage || newImage.length" class="edit-image">
                                         <IconSvg icon="cancel" @click="toggleEditImage(false) "/>
                                     </div>
                                     <input-file
@@ -103,13 +109,14 @@
 
     const config = useRuntimeConfig()
     let filters = ref([])
-    const imageToEdit = ref('')
-    const newImage = ref('')
+    const imageToEdit = ref<string[]>([])
+    const newImage = ref<File[]>([])
     const showAlertDelete = ref(false)
-    let currentEventClicked = {}
-    let currentEventClickedToEdit = ref({})
-    const categoriesData = ref([])
+    let currentEventClicked = ref<any>({})
+    let currentEventClickedToEdit = ref<any>({})
+    const categoriesData = ref<any[]>([])
     const isUpdateImage = ref(false)
+    const isOpenPremium = ref(false)
 
     const categoriesMapper = {
         exam: 'Exame',
@@ -125,10 +132,10 @@
 
     const isOpen = ref(false)
     const isOpenImage = ref(false)
-    const imagePath = ref('')
+    const imagePaths = ref<string[]>([])
     const eventTitle = ref('')
 
-    let events = ref([])
+    let events = ref<any[]>([])
 
     function formatCurrency(value: string) {
         const formatter = new Intl.NumberFormat('pt-BR', {
@@ -139,24 +146,19 @@
         return String(formatter.format(Number(String(value).replace(/\D/g, '')) / 100 / 100))
     }
 
-    function getImageModel(image: File) {
-        newImage.value = image
+    function getImageModel(images: File[]) {
+        newImage.value = images
     }
 
-    function toggleEditImage(value) {
+    function toggleEditImage(value: boolean) {
         isUpdateImage.value = value
         if (!isOpenImage.value) {
-            imageToEdit.value = ''
-            newImage.value = ''
+            imageToEdit.value = []
+            newImage.value = []
         }
     }
 
-    function transformToObjectUrl(file: File) {
-        if (currentEventClickedToEdit.value.image) {
-            URL.revokeObjectURL(currentEventClickedToEdit.value.image);
-        }
-        currentEventClickedToEdit.value.image = URL.createObjectURL(file)
-    }
+
     function updateFilter(event: string) {
         if (event === 'all') {
             filters.value = []
@@ -179,8 +181,8 @@
         currentEventClickedToEdit.value = { ...event, image: event.image.length ? event.image : [] }
     }
 
-    function openConfirmation(event: {}) {
-        currentEventClicked = event
+    function openConfirmation(event: any) {
+        currentEventClicked.value = event
         showAlertDelete.value = true
     }
 
@@ -188,7 +190,7 @@
         isOpen.value = false
         isOpenImage.value = false
         showAlertDelete.value = false
-        imagePath.value = ''
+        imagePaths.value = []
         eventTitle.value = ''
     }
 
@@ -196,16 +198,16 @@
         isOpen.value = true
     }
 
-    function openModalImage(eventImagePath: string, eventTitleToModal: string) {
+    function openModalImage(eventImagePaths: string[], eventTitleToModal: string) {
         isOpenImage.value = true
-        imagePath.value = eventImagePath
+        imagePaths.value = eventImagePaths
         eventTitle.value = eventTitleToModal
     }
 
     async function removeEvent() {
-        const event = { ...currentEventClicked }
+        const event = { ...currentEventClicked.value }
         showAlertDelete.value = false
-        currentEventClicked = {}
+        currentEventClicked.value = {}
         const { error } = await supabase
             .from('life_events')
             .delete()
@@ -225,59 +227,65 @@
         alert('erro ao deletar evento')
     }
 
-    async function saveEventImage(eventId) {
-        if (!imageToEdit.value) return
-        const fileExt = newImage.value.name.split('.').pop()
-        const fileName = `${Math.random()}.${fileExt}`
-        const filePath = `event/${fileName}`
+    async function saveEventImage(eventId: number) {
+        if (!newImage.value || newImage.value.length === 0) return []
+        
+        const uploads = newImage.value.map(async (file) => {
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${Math.random()}.${fileExt}`
+            const filePath = `event/${fileName}`
 
-        const { data, error } = await supabase.storage
-            .from('images')
-            .upload(filePath, newImage.value)
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(filePath, file)
 
-        if (error) {
-            console.error('Erro no upload:', error.message);
-            return;
+            if (error) {
+                console.error('Erro no upload:', error.message)
+                return null
+            }
+            return filePath
+        })
+
+        const uploadedPaths = await Promise.all(uploads)
+        const pathsToSave: string[] = uploadedPaths.filter(path => path !== null) as string[]
+
+        if (pathsToSave.length > 0) {
+            await saveImageEventPath(eventId, pathsToSave)
         }
-
-        await saveImageEventPath(eventId, filePath)
+        return pathsToSave
     }
 
-    async function saveImageEventPath(eventId: number, filePath: string) {
+    async function saveImageEventPath(eventId: number, filePaths: string[]) {
+        const payload = filePaths.map(filePath => ({
+            event_id: eventId,
+            image_path: filePath
+        }))
+
         const { data, error } = await supabase
         .from('image_events')
-        .insert([
-            { event_id: eventId, image_path: filePath },
-        ])
+        .insert(payload)
         .select()
 
         if (error) {
             alert('erro ao salvar o path a imagem')
         }
 
-        return data.image_path
+        return data?.map(d => d.image_path) || []
     }
 
     async function updateEvent() {
         if (!currentEventClickedToEdit.value.event_title) return
-        let image_path: string = ''
-        if (!currentEventClickedToEdit.value.image.length) {
-           image_path = await saveEventImage(currentEventClickedToEdit.value.id)
-        } else {
-            await supabase.storage.from('bucket').remove([currentEventClickedToEdit.value.image[0].image_path])
-            image_path = saveEventImage(currentEventClickedToEdit.value.id)
-        }
 
-        if (image_path) {
-            const { data, error } = await supabase
-            .from('life_events')
-            .update(
-                { 
-                    image_path
-                },
-            )
-            .eq('event_id', currentEventClickedToEdit.value.id)
-            .select()
+        if (isUpdateImage.value && newImage.value.length > 0) {
+            // Delete old images
+            if (currentEventClickedToEdit.value.image.length > 0) {
+                const pathsToRemove = currentEventClickedToEdit.value.image.map((img: any) => img.image_path)
+                await supabase.storage.from('images').remove(pathsToRemove)
+                await supabase.from('image_events').delete().eq('event_id', currentEventClickedToEdit.value.id)
+            }
+            
+            // Upload new ones
+            await saveEventImage(currentEventClickedToEdit.value.id)
         }
 
         const { data, error } = await supabase
@@ -600,6 +608,19 @@ button {
     align-items: center;
     color: rgba($color: #000000, $alpha: .7);
     border: 1px solid rgba($color: #000000, $alpha: .3);
+
+    &.upgrade-btn {
+        background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+        color: #D81B60;
+        border: none;
+        font-weight: bold;
+        transition: transform 0.2s, box-shadow 0.2s;
+        
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3);
+        }
+    }
 }
 
 input, select, textarea {

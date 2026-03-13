@@ -1,33 +1,45 @@
 <template>
   <div class="input-file">
-    <IconSvg class="icon" v-if="!model" icon="image-upload" size="80" />
-    <NuxtImg v-if="model" :src="model" width="200" height="200" draggable="false" />
-    <input class="hide" type="file" :multiple="false" ref="inputFile" @change="fileUpload" placeholder="envie a imagem do novo eveno">
-    <button @click="triggerUpload">Selecione sua imagem</button>
+    <IconSvg class="icon" v-if="!model || model.length === 0" icon="image-upload" size="80" />
+    <div class="image-preview" v-if="model && model.length > 0">
+      <NuxtImg v-for="(img, index) in model" :key="index" :src="img" width="100" height="100" draggable="false" />
+    </div>
+    <input class="hide" type="file" :multiple="true" ref="inputFile" @change="fileUpload" placeholder="envie a imagem do novo evento">
+    <button @click="triggerUpload">Selecione suas imagens</button>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 
 const emits = defineEmits(['change-image', 'url-image'])
 
 const inputFile = ref(null)
-const model = defineModel<String>()
+const model = defineModel<string[]>({ default: () => [] })
 
-async function fileUpload(event) {
-  const file = event.target.files[0]
-  model.value = URL.createObjectURL(file)
-  emits('change-image', event.target.files[0])
+async function fileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+
+  const files = Array.from(target.files)
+  
+  if (model.value && model.value.length) {
+    model.value.forEach(url => URL.revokeObjectURL(url as string))
+  }
+  
+  model.value = files.map(file => URL.createObjectURL(file))
+  emits('change-image', files)
   emits('url-image', model.value)
 }
 
 function triggerUpload() {
-  inputFile.value.click()
+  if (inputFile.value) {
+    (inputFile.value as HTMLInputElement).click()
+  }
 }
 </script>
 
-<style lang="scss", scoped>
-
+<style lang="scss" scoped>
 .hide {
   display: none;
 }
@@ -47,6 +59,14 @@ function triggerUpload() {
   }
 }
 
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
 button {
     cursor: pointer;
     margin-top: 10px;
@@ -61,5 +81,6 @@ button {
 
 img {
   border-radius: 10px;
+  object-fit: cover;
 }
 </style>

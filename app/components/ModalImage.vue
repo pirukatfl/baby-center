@@ -4,7 +4,9 @@
           <div class="container">
                 <div class="modal">
                     <div class="header">
-                        <div>Imagem do evento: <span>{{ eventTitle }}</span></div>
+                        <div>Imagem do evento: <span>{{ eventTitle }}</span> 
+                            <span v-if="imagePaths.length > 1" style="margin-left: 10px;">({{ currentIndex + 1 }}/{{ imagePaths.length }})</span>
+                        </div>
                         <IconSvg icon="cancel" @click="$emit('close')" />
                         <div class="action-rotate">
                           <IconSvg icon="rotate-left" @click="rotate('left')" />
@@ -18,11 +20,20 @@
                         </div>
                     </div>
                     <div class="body">
+                      <div class="carousel-btn prev" v-if="imagePaths.length > 1" @click="prevImage">
+                        <span>&#10094;</span>
+                      </div>
+                      
                       <NuxtImg
                         class="image-opened"
-                        :src="imagePath"
+                        v-if="imagePaths.length > 0"
+                        :src="imagePaths[currentIndex]"
                         :style="{ transform: `rotate(${rotation}deg) scale(${scale})` }"
                       />
+
+                      <div class="carousel-btn next" v-if="imagePaths.length > 1" @click="nextImage">
+                        <span>&#10095;</span>
+                      </div>
                     </div>
                 </div>
             </div>
@@ -30,12 +41,15 @@
     </Teleport>
 </template>
 <script setup lang="ts">
+    import { ref, watch } from 'vue'
+
     const props = defineProps({
         isOpenImage: {
             type: Boolean,
         },
-        imagePath: {
-            type: String,
+        imagePaths: {
+            type: Array as () => string[],
+            default: () => []
         },
         eventTitle: {
             type: String,
@@ -44,6 +58,35 @@
 
     const rotation = ref(0)
     const scale = ref(1)
+    const currentIndex = ref(0)
+
+    watch(() => props.isOpenImage, (newVal) => {
+        if (newVal) {
+            currentIndex.value = 0
+            rotation.value = 0
+            scale.value = 1
+        }
+    })
+
+    function prevImage() {
+        if (currentIndex.value > 0) {
+            currentIndex.value--
+        } else {
+            currentIndex.value = props.imagePaths.length - 1
+        }
+        rotation.value = 0
+        scale.value = 1
+    }
+
+    function nextImage() {
+        if (currentIndex.value < props.imagePaths.length - 1) {
+            currentIndex.value++
+        } else {
+            currentIndex.value = 0
+        }
+        rotation.value = 0
+        scale.value = 1
+    }
 
     function zoom(type: string) {
       if (type === 'in') {
@@ -162,11 +205,41 @@
 
         .body {
           height: 100%;
+          width: 100%;
           display: flex;
           align-items: center;
+          justify-content: center;
           overflow: hidden;
           padding: 5px!important;
+          position: relative;
           
+          .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            padding: 15px 20px;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            user-select: none;
+            transition: background-color 0.2s;
+
+            &:hover {
+              background-color: rgba(255, 255, 255, 1);
+            }
+
+            &.prev {
+              left: 20px;
+            }
+
+            &.next {
+              right: 20px;
+            }
+          }
+
           .image-opened {
               max-width: 100%;
               max-height: 100%;
